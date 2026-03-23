@@ -21,7 +21,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!["strategic", "tactical", "operational"].includes(level)) {
+    // Role-based level validation
+    const ROLE_PERMISSIONS: Record<string, string[]> = {
+      "Risk Analyst": ["strategic", "tactical", "operational", "human_awareness"],
+      "Director": ["strategic"],
+      "Division Head": ["tactical"],
+      "Staff": ["operational"],
+    };
+
+    const userRole = session.user?.role || "Staff";
+    const allowedLevels = ROLE_PERMISSIONS[userRole as keyof typeof ROLE_PERMISSIONS] || ["operational"];
+
+    if (!allowedLevels.includes(level)) {
+      return NextResponse.json(
+        { error: `Forbidden: Your role (${userRole}) is not authorized to generate ${level} reports.` },
+        { status: 403 }
+      );
+    }
+
+    if (!["strategic", "tactical", "operational", "human_awareness"].includes(level)) {
       return NextResponse.json(
         { error: "Invalid report level" },
         { status: 400 }
@@ -61,13 +79,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Prepare analysis data for report generation
+    const resultsKey = level === 'human_awareness' ? 'humanAwareness' : level;
+    const currentSummary = (analysis.summary as any)?.[resultsKey] || {};
+    
     const analysisData = {
-      vulnerabilities: analysis.vulnerabilities,
-      riskScore: analysis.riskScore,
-      category: analysis.category,
-      inherentRisk: analysis.inherentRisk,
-      residualRisk: analysis.residualRisk,
-      aiInsights: analysis.aiInsights,
+      level,
+      company: analysis.company,
+      category: (analysis as any).category,
+      summary: currentSummary,
+      data: (analysis as any)[resultsKey] || [],
     };
 
     // Generate report using AI

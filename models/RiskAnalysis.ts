@@ -33,15 +33,18 @@ export interface IRiskAnalysis extends Document {
       operational: number;
       tactical: number;
       strategic: number;
+      humanAwareness: number;
     };
   };
   operational: IQuestionAnalysis[];
   tactical: IQuestionAnalysis[];
   strategic: IQuestionAnalysis[];
+  humanAwareness: IQuestionAnalysis[];
   summary: {
     operational: any;
     tactical: any;
     strategic: any;
+    humanAwareness: any;
     overall: any;
   };
   createdAt: Date;
@@ -86,12 +89,14 @@ const RiskAnalysisSchema = new Schema<IRiskAnalysis>(
       levels: {
         operational: Number,
         tactical: Number,
-        strategic: Number
+        strategic: Number,
+        humanAwareness: Number
       }
     },
     operational: [QuestionAnalysisSchema],
     tactical: [QuestionAnalysisSchema],
     strategic: [QuestionAnalysisSchema],
+    humanAwareness: [QuestionAnalysisSchema],
     summary: Schema.Types.Mixed
   },
   { timestamps: true }
