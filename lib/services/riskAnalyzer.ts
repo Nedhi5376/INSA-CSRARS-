@@ -96,22 +96,26 @@ export const performRiskAnalysis = async (questionnaireData: any[], apiKey: stri
             levels: {
                 operational: questionnaireData.filter(q => q.level === 'operational').length,
                 tactical: questionnaireData.filter(q => q.level === 'tactical').length,
-                strategic: questionnaireData.filter(q => q.level === 'strategic').length
+                strategic: questionnaireData.filter(q => q.level === 'strategic').length,
+                humanAwareness: questionnaireData.filter(q => q.level === 'human_awareness').length
             }
         },
         operational: [],
         tactical: [],
         strategic: [],
+        humanAwareness: [],
         summary: {
             operational: {},
             tactical: {},
             strategic: {},
+            humanAwareness: {},
             overall: {}
         }
     };
 
-    for (const level of ['operational', 'tactical', 'strategic']) {
+    for (const level of ['operational', 'tactical', 'strategic', 'human_awareness']) {
         const levelQuestions = questionnaireData.filter(q => q.level === level);
+        const resultsKey = level === 'human_awareness' ? 'humanAwareness' : level;
 
         for (let i = 0; i < levelQuestions.length; i++) {
             const question = levelQuestions[i];
@@ -172,17 +176,17 @@ export const performRiskAnalysis = async (questionnaireData: any[], apiKey: stri
                 analysis = analysisResult;
             }
             const result = createQuestionResult(question, analysis);
-            results[level].push(result);
+            resultsKey === 'humanAwareness' ? (results.humanAwareness.push(result)) : (results[level].push(result));
 
             if (i < levelQuestions.length - 1) {
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
         }
 
-        results.summary[level] = calculateLevelSummary(results[level]);
+        results.summary[resultsKey] = calculateLevelSummary(resultsKey === 'humanAwareness' ? results.humanAwareness : results[level]);
     }
 
-    const allData = [...results.operational, ...results.tactical, ...results.strategic];
+    const allData = [...results.operational, ...results.tactical, ...results.strategic, ...results.humanAwareness];
     results.summary.overall = calculateOverallSummary(allData);
 
     return results;
