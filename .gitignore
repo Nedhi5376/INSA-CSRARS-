@@ -39,3 +39,6 @@ next-env.d.ts
 basicnotes.txt
 .github
 
+# Kiro IDE
+.kiro
+
