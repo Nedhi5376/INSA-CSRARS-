@@ -1,4 +1,5 @@
 import { initializeAI, analyzeQuestion } from '@/lib/utils/ai';
+import { calculateRiskScore, getRiskLevel } from '@/lib/utils/risk';
 
 const createQuestionResult = (question: any, analysis: any) => {
     return {
@@ -144,9 +145,10 @@ export const performRiskAnalysis = async (questionnaireData: any[], apiKey: stri
                 likelihood = Math.min(5, Math.max(1, likelihood + jitter));
                 impact = Math.min(5, Math.max(1, impact));
 
-                const score = likelihood * impact;
-                const riskLevel = score >= 16 ? 'CRITICAL' : score >= 12 ? 'HIGH' : score >= 6 ? 'MEDIUM' : score >= 2 ? 'LOW' : 'VERY_LOW';
-                const riskColor = riskLevel === 'CRITICAL' ? '#dc2626' : riskLevel === 'HIGH' ? '#ef4444' : riskLevel === 'MEDIUM' ? '#f97316' : '#10b981';
+                const riskInfo = getRiskLevel(likelihood, impact);
+                const score = riskInfo.riskScore;
+                const riskLevel = riskInfo.riskLevel;
+                const riskColor = riskInfo.riskColor;
 
                 const impactLabels = ['Minimal', 'Low', 'Moderate', 'High', 'Critical'];
                 const likelihoodLabels = ['Remote', 'Low', 'Moderate', 'High', 'Almost Certain'];

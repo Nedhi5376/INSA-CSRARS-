@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import dbConnect from "@/lib/mongodb";
 import RiskAnalysis, { IRiskAnalysis, IQuestionAnalysis } from "@/models/RiskAnalysis";
+import { calculateRiskScore, getRiskLevel } from "@/lib/utils/risk";
 
 export type AnalysisLevel = "operational" | "tactical" | "strategic";
 
@@ -21,20 +22,13 @@ export interface UpdateQuestionAnalysisInput {
 
 
 function computeRiskScoreAndLevel(likelihood: number, impact: number) {
-  const riskScore = (likelihood || 0) * (impact || 0);
+  const riskInfo = getRiskLevel(likelihood, impact);
 
-  let riskLevel = "LOW";
-  let riskColor = "green";
-
-  if (riskScore >= 15) {
-    riskLevel = "HIGH";
-    riskColor = "red";
-  } else if (riskScore >= 6) {
-    riskLevel = "MEDIUM";
-    riskColor = "yellow";
-  }
-
-  return { riskScore, riskLevel, riskColor };
+  return {
+    riskScore: riskInfo.riskScore,
+    riskLevel: riskInfo.riskLevel,
+    riskColor: riskInfo.riskColor,
+  };
 }
 
 export class AnalysisService {

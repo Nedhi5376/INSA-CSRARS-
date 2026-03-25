@@ -1,62 +1,6 @@
 import { OpenRouter } from '@openrouter/sdk';
-export const RISK_MATRIX_CONFIG = {
-  likelihoodScale: {
-    1: { label: 'Remote', description: 'Very unlikely to happen', score: 1 },
-    2: { label: 'Low', description: 'Could happen but rare', score: 2 },
-    3: { label: 'Moderate', description: 'Could happen sometimes', score: 3 },
-    4: { label: 'High', description: 'Likely to happen', score: 4 },
-    5: { label: 'Almost Certain', description: 'Very likely to happen', score: 5 },
-  },
-  impactScale: {
-    1: { label: 'Minimal', description: 'Minor inconvenience', score: 1 },
-    2: { label: 'Low', description: 'Slight disruption', score: 2 },
-    3: { label: 'Moderate', description: 'Significant disruption', score: 3 },
-    4: { label: 'High', description: 'Severe loss', score: 4 },
-    5: { label: 'Critical', description: 'Catastrophic impact', score: 5 },
-  },
-  riskLevels: {
-    VERY_LOW: {
-      range: [1, 3],
-      color: '#10b981',
-      label: 'Very Low',
-      action: 'Acceptable',
-      priority: 'Monitor',
-      timeline: '12+ months',
-    },
-    LOW: {
-      range: [4, 8],
-      color: '#f59e0b',
-      label: 'Low',
-      action: 'Monitor',
-      priority: 'Low',
-      timeline: '6-12 months',
-    },
-    MEDIUM: {
-      range: [9, 15],
-      color: '#f97316',
-      label: 'Medium',
-      action: 'Address Soon',
-      priority: 'Medium',
-      timeline: '3-6 months',
-    },
-    HIGH: {
-      range: [16, 20],
-      color: '#ef4444',
-      label: 'High',
-      action: 'Priority Action',
-      priority: 'High',
-      timeline: '30-90 days',
-    },
-    CRITICAL: {
-      range: [21, 25],
-      color: '#dc2626',
-      label: 'Critical',
-      action: 'Immediate Action',
-      priority: 'Critical',
-      timeline: 'Within 30 days',
-    },
-  },
-};
+import { calculateRiskScore, getRiskLevel, RISK_MATRIX_CONFIG } from '@/lib/utils/risk';
+
 export interface RiskAnalysisResult {
   likelihood: number; 
   impact: number; 
@@ -87,53 +31,8 @@ export interface AnalysisQuestion {
   section: string;
   category?: string;
 }
-/**
- * Calculate raw risk score from likelihood and impact
- */
-export const calculateRiskScore = (likelihood: number, impact: number): number => {
-  const validLikelihood = Math.min(5, Math.max(1, likelihood));
-  const validImpact = Math.min(5, Math.max(1, impact));
-  return validLikelihood * validImpact;
-};
 
-/**
- * Get comprehensive risk level information based on likelihood and impact
- */
-export const getRiskLevel = (
-  likelihood: number,
-  impact: number
-): Omit<RiskAnalysisResult, 'gap' | 'threat' | 'mitigation' | 'question' | 'answer'> => {
-  const riskScore = calculateRiskScore(likelihood, impact);
-  const validLikelihood = Math.min(5, Math.max(1, likelihood));
-  const validImpact = Math.min(5, Math.max(1, impact));
-
-  let levelKey: keyof typeof RISK_MATRIX_CONFIG.riskLevels;
-
-  if (riskScore >= 21) levelKey = 'CRITICAL';
-  else if (riskScore >= 16) levelKey = 'HIGH';
-  else if (riskScore >= 9) levelKey = 'MEDIUM';
-  else if (riskScore >= 4) levelKey = 'LOW';
-  else levelKey = 'VERY_LOW';
-
-  const levelConfig = RISK_MATRIX_CONFIG.riskLevels[levelKey];
-  const likelihoodLabel =
-    RISK_MATRIX_CONFIG.likelihoodScale[validLikelihood as 1 | 2 | 3 | 4 | 5].label;
-  const impactLabel = RISK_MATRIX_CONFIG.impactScale[validImpact as 1 | 2 | 3 | 4 | 5].label;
-
-  return {
-    likelihood: validLikelihood,
-    impact: validImpact,
-    riskScore,
-    riskLevel: levelKey,
-    riskColor: levelConfig.color,
-    riskLabel: levelConfig.label,
-    riskAction: levelConfig.action,
-    riskPriority: levelConfig.priority,
-    riskTimeline: levelConfig.timeline,
-    likelihoodLabel,
-    impactLabel,
-  };
-};
+export { calculateRiskScore, getRiskLevel, RISK_MATRIX_CONFIG };
 
 /**
  * Get risk matrix position (for 5x5 matrix visualization)
@@ -145,18 +44,13 @@ export const getRiskMatrixPosition = (
   const validLikelihood = Math.min(5, Math.max(1, likelihood));
   const validImpact = Math.min(5, Math.max(1, impact));
   const riskScore = calculateRiskScore(validLikelihood, validImpact);
-
-  let level = 'VERY_LOW';
-  if (riskScore >= 21) level = 'CRITICAL';
-  else if (riskScore >= 16) level = 'HIGH';
-  else if (riskScore >= 9) level = 'MEDIUM';
-  else if (riskScore >= 4) level = 'LOW';
+  const riskLevelInfo = getRiskLevel(validLikelihood, validImpact);
 
   return {
     row: validLikelihood,
     col: validImpact,
     score: riskScore,
-    level,
+    level: riskLevelInfo.riskLevel,
   };
 };
 
