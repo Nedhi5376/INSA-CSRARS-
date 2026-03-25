@@ -21,6 +21,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { name: "Risk Treatment", href: "/risk-treatment" },
     { name: "Report&Documentation", href: "/reports" },
     { name: "Risk Register", href: "/risks" },
+    { name: "Messages", href: "/messages" },
     { name: "My Profile", href: "/profile" },
   ];
 
@@ -86,8 +87,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <Link
                       href={item.href}
                       className={`block px-4 py-2 rounded-md transition ${isActive
-                          ? "bg-slate-700 text-white"
-                          : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                        ? "bg-slate-700 text-white"
+                        : "text-slate-300 hover:bg-slate-700 hover:text-white"
                         }`}
                     >
                       {item.name}

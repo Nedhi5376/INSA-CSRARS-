@@ -136,6 +136,29 @@ export const ProcessAnalysisSchema = z.object({
     questionnaireId: mongoId,
 });
 
+// ─── Messaging (Feature 3) ────────────────────────────────────────────────────
+
+export const CreateConversationSchema = z.object({
+    /** Array of participant user IDs (excluding the caller — added server-side) */
+    participantIds: z
+        .array(mongoId)
+        .min(1, "At least one participant is required")
+        .max(49, "Too many participants"),
+});
+
+export const SendMessageSchema = z.object({
+    conversationId: mongoId,
+    text: z
+        .string({ required_error: "Message text is required" })
+        .trim()
+        .min(1, "Message cannot be empty")
+        .max(4000, "Message is too long"),
+});
+
+export const ReadMessagesSchema = z.object({
+    conversationId: mongoId,
+});
+
 // ─── Helper: validate + return consistent error response ─────────────────────
 
 type ValidationSuccess<T> = { success: true; data: T };
