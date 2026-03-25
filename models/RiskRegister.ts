@@ -1,4 +1,5 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
+import { calculateRiskScore, getRiskLevel } from "@/lib/utils/risk";
 
 export type RiskStatus = "Open" | "In Progress" | "Mitigated" | "Closed" | "Accepted";
 export type RiskCategory = "Operational" | "Strategic" | "Financial" | "Compliance" | "Technology" | "Reputational";
@@ -177,19 +178,14 @@ RiskRegisterSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to calculate risk score and level
 RiskRegisterSchema.pre('save', function (next) {
-    // Calculate risk score
-    this.riskScore = this.likelihood * this.impact;
+    // enforce valid 1-5 range for the base metrics
+    this.likelihood = Math.min(5, Math.max(1, this.likelihood));
+    this.impact = Math.min(5, Math.max(1, this.impact));
 
-    // Determine risk level based on score
-    if (this.riskScore >= 20) {
-        this.riskLevel = "Critical";
-    } else if (this.riskScore >= 12) {
-        this.riskLevel = "High";
-    } else if (this.riskScore >= 6) {
-        this.riskLevel = "Medium";
-    } else {
-        this.riskLevel = "Low";
-    }
+    const riskInfo = getRiskLevel(this.likelihood, this.impact);
+
+    this.riskScore = riskInfo.riskScore;
+    this.riskLevel = riskInfo.riskLabel as any;
 
     next();
 });

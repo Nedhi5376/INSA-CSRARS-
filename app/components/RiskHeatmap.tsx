@@ -1,4 +1,5 @@
 import React from 'react';
+import { getRiskLevelByScore } from '@/lib/utils/risk';
 
 interface HeatmapCell {
   likelihood: number;
@@ -22,10 +23,20 @@ const RiskHeatmap: React.FC<PerformanceMetricsProps> = ({ data }) => {
 
   const getCellColor = (likelihood: number, impact: number) => {
     const score = likelihood * impact;
-    if (score >= 15) return 'bg-red-500/80 text-white';
-    if (score >= 9) return 'bg-orange-500/80 text-white';
-    if (score >= 5) return 'bg-yellow-500/80 text-slate-900';
-    return 'bg-green-500/80 text-white';
+    const riskInfo = getRiskLevelByScore(score);
+
+    switch (riskInfo.riskLevel) {
+      case 'CRITICAL':
+        return 'bg-red-500/80 text-white';
+      case 'HIGH':
+        return 'bg-orange-500/80 text-white';
+      case 'MEDIUM':
+        return 'bg-yellow-500/80 text-slate-900';
+      case 'LOW':
+        return 'bg-green-500/80 text-white';
+      default:
+        return 'bg-slate-500/80 text-white';
+    }
   };
 
   return (
@@ -61,11 +72,12 @@ const RiskHeatmap: React.FC<PerformanceMetricsProps> = ({ data }) => {
           Impact →
         </div>
       </div>
-      <div className="mt-6 grid grid-cols-4 gap-2">
-        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-red-500 rounded-sm"></div><span className="text-[10px] text-slate-400">Critical</span></div>
-        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-orange-500 rounded-sm"></div><span className="text-[10px] text-slate-400">High</span></div>
-        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-yellow-500 rounded-sm"></div><span className="text-[10px] text-slate-400">Medium</span></div>
-        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-green-500 rounded-sm"></div><span className="text-[10px] text-slate-400">Low</span></div>
+      <div className="mt-6 grid grid-cols-5 gap-2">
+        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-red-500 rounded-sm"></div><span className="text-[10px] text-slate-400">Critical (21-25)</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-orange-500 rounded-sm"></div><span className="text-[10px] text-slate-400">High (16-20)</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-yellow-500 rounded-sm"></div><span className="text-[10px] text-slate-400">Medium (9-15)</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-green-500 rounded-sm"></div><span className="text-[10px] text-slate-400">Low (4-8)</span></div>
+        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-green-300 rounded-sm"></div><span className="text-[10px] text-slate-400">Very Low (1-3)</span></div>
       </div>
     </div>
   );

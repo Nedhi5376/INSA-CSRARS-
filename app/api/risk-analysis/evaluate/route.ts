@@ -5,6 +5,7 @@ import RiskConfig from "@/models/RiskConfig";
 import RiskMatrix from "@/models/RiskMatrix";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getRiskLevelByScore } from "@/lib/utils/risk";
 
 // SRS: POST /api/risk-analysis/evaluate
 // Uses Likelihood x Impact and qualitative (H/M/L) evaluation based on existing scores.
@@ -49,10 +50,8 @@ export async function POST(request: Request) {
         ? scores.reduce((sum: number, v: number) => sum + v, 0) / scores.length
         : 0;
 
-    let qualitative: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "LOW";
-    if (avgScore >= 16) qualitative = "CRITICAL";
-    else if (avgScore >= 12) qualitative = "HIGH";
-    else if (avgScore >= 6) qualitative = "MEDIUM";
+    const qualitativeInfo = getRiskLevelByScore(avgScore);
+    const qualitative = qualitativeInfo.riskLevel;
 
     const averageALE = 0; // Calculate or retrieve the average ALE value
     const aleBand =
